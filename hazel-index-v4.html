@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hazel AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F4F8;--ink:#14213D;--soft:#E3E8F1;--hz:#9A6B2F;--card:#fff;--mut:#6B7488}
+[data-theme=dark]{--bg:#0F1426;--ink:#E8ECF6;--soft:#252C45;--hz:#D9A75B;--card:#171D33;--mut:#95A0BC}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Sora,"Noto Sans Devanagari",system-ui,sans-serif;display:flex}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.g{background:none;border:1px solid var(--soft);border-radius:999px;padding:6px 14px}
+:focus-visible{outline:2px solid var(--hz)}
+#sb{width:280px;background:var(--card);border-right:1px solid var(--soft);display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 12px 12px;gap:10px;position:fixed;top:0;bottom:0;left:0;transform:translateX(-100%);transition:transform .25s;z-index:5}
+#sb.open{transform:none}
+#scrim{display:none;position:fixed;inset:0;background:#0006;z-index:4}
+#scrim.open{display:block}
+#new{background:var(--ink);color:var(--bg);border:0;border-radius:14px;padding:10px;font-weight:600}
+#q{border:1px solid var(--soft);background:var(--bg);border-radius:12px;padding:8px 12px}
+#list{flex:1;overflow:auto}
+.ci{padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci:hover,.ci.on{background:var(--soft)}
+.foot{display:flex;flex-wrap:wrap;gap:8px}
+main{flex:1;display:flex;flex-direction:column;min-width:0;height:100dvh}
+header{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
+h1{flex:1;font-size:17px;margin:0;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#log{flex:1;overflow:auto;width:100%;max-width:780px;margin:0 auto;padding:8px 18px}
+.m{margin:16px 0}
+.u .b{margin-left:auto;width:fit-content;max-width:88%;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:20px 20px 4px 20px;white-space:pre-wrap}
+.a .b{white-space:pre-wrap}
+.b h3{margin:.6em 0 .2em;font-size:17px}
+.b ul,.b ol{margin:.3em 0;padding-left:1.3em}
+.b code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:.9em}
+.cb{position:relative;margin:.6em 0}
+.cb pre{margin:0;background:var(--soft);border-radius:12px;padding:14px;overflow:auto;white-space:pre}
+.cb pre code{background:none;padding:0}
+.cc{position:absolute;top:6px;right:6px;font-size:12px;padding:2px 10px}
+.act{display:flex;gap:4px;margin-top:4px}
+.u .act{justify-content:flex-end}
+.act button{background:none;border:0;border-radius:8px;padding:4px 8px;opacity:.55;font-size:15px}
+.act button:hover,.act button.on{opacity:1;background:var(--soft)}
+.hi{text-align:center;margin-top:16vh}
+.hi h2{font-size:30px;margin:0 0 6px}
+.hi p{color:var(--mut);margin:0 0 18px}
+.chip{display:block;width:100%;max-width:420px;margin:8px auto;text-align:left;border:1px solid var(--soft);background:var(--card);border-radius:14px;padding:10px 14px}
+#bar{display:flex;gap:10px;align-items:flex-end;width:100%;max-width:780px;margin:0 auto;padding:10px 18px calc(12px + env(safe-area-inset-bottom))}
+#in{flex:1;border:1px solid var(--soft);background:var(--card);border-radius:24px;padding:12px 18px;resize:none;max-height:120px;line-height:1.4}
+#mic{width:50px;height:50px;flex:none;border:0;border-radius:50%;background:radial-gradient(circle at 30% 30%,#E0B06A,var(--hz) 45%,#14213D)}
+#mic.on{animation:br 1.4s infinite}
+@keyframes br{0%{box-shadow:0 0 0 0 rgba(154,107,47,.55)}70%,100%{box-shadow:0 0 0 18px #0000}}
+@media(prefers-reduced-motion:reduce){#mic.on{animation:none;outline:3px solid var(--hz)}}
+#pop{position:fixed;top:calc(54px + env(safe-area-inset-top));right:12px;background:var(--card);border:1px solid var(--soft);border-radius:14px;padding:6px;display:none;z-index:6;box-shadow:0 8px 30px #0003}
+#pop.open{display:block}
+#pop button{display:block;width:100%;text-align:left;background:none;border:0;padding:9px 16px;border-radius:10px}
+#pop button:hover{background:var(--soft)}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:12px;display:none;z-index:9;max-width:90%}
+#adm{position:fixed;top:0;right:0;bottom:0;width:min(380px,100%);background:var(--card);padding:20px;overflow:auto;transform:translateX(100%);transition:transform .25s;z-index:7}
+#adm.open{transform:none}
+#adm input,#adm textarea{width:100%;border:1px solid var(--soft);border-radius:12px;padding:8px 12px;margin:4px 0 14px;background:var(--bg)}
+@media(min-width:900px){#sb{transform:none}main{margin-left:280px}#menu{display:none}#scrim.open{display:none}}
+#vm{position:fixed;inset:0;background:var(--bg);z-index:20;display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px}
+#vm.open{display:flex}
+#vx{position:absolute;top:calc(14px + env(safe-area-inset-top));right:16px;width:44px;height:44px;border-radius:50%;border:1px solid var(--soft);background:var(--card);font-size:18px}
+#vst{color:var(--mut)}
+#live{min-height:90px;max-height:34vh;overflow:auto;text-align:center;font-size:22px;line-height:1.5;width:100%;max-width:640px}
+#wv{display:flex;align-items:center;gap:4px;height:90px}
+#wv i{width:5px;height:10px;border-radius:3px;background:var(--hz);animation:wv 1.1s ease-in-out infinite}
+#wv i:nth-child(3n){animation-delay:-.35s}#wv i:nth-child(3n+1){animation-delay:-.7s}#wv i:nth-child(4n){animation-delay:-.15s}
+#vm.hot #wv i{animation-duration:.45s}
+#vm.sp #wv i{background:var(--ink)}
+#vm.th #wv i{animation:none}
+@keyframes wv{50%{height:72px}}
+@media(prefers-reduced-motion:reduce){#wv i{animation:none}}
+#vstop{width:68px;height:68px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font-size:22px}
+#ad{position:fixed;inset:0;background:var(--bg);z-index:15;overflow:auto;padding:calc(14px + env(safe-area-inset-top)) 18px 40px;display:none}
+#ad.open{display:block}
+.ah{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+#tabs{display:none;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+#tabs .on{background:var(--ink);color:var(--bg)}
+.fl{display:block;margin:12px 0}
+.fl span{display:block;color:var(--mut);font-size:14px}
+#ad input:not([type=checkbox]):not([type=color]):not([type=range]),#ad textarea,#ad select{width:100%;border:1px solid var(--soft);border-radius:12px;padding:8px 12px;background:var(--card)}
+#ad input[type=range]{width:100%}
+.row{padding:6px 0;border-bottom:1px solid var(--soft)}
+#sv{display:none;margin-top:16px;background:var(--ink);color:var(--bg)}
+.hi{margin-top:6vh}
+.av{position:relative;width:min(46vw,200px);aspect-ratio:1;border-radius:50%;margin:0 auto 14px;animation:idle 5s ease-in-out infinite}
+.av::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--hz),var(--soft),var(--hz))}
+.av img{position:relative;display:block;width:calc(100% - 10px);height:calc(100% - 10px);margin:5px;border-radius:50%;object-fit:cover;border:3px solid var(--bg)}
+@keyframes idle{50%{transform:scale(1.02)}}
+body[data-st=listening] .av{animation:ring 1.4s infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(154,107,47,.5)}100%{box-shadow:0 0 0 26px #0000}}
+body[data-st=thinking] .av::before{animation:spin 2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+body[data-st=speaking] .av{animation:talk .7s ease-in-out infinite}
+@keyframes talk{50%{transform:scale(1.06)}}
+@media(prefers-reduced-motion:reduce){.av,.av::before{animation:none!important}}
+#nav{max-height:32vh;overflow:auto}
+#tout{white-space:pre-wrap}
+</style></head><body>
+<aside id="sb"><button id="new">＋ New chat</button><input id="q" placeholder="Search chats"><div id="list"></div>
+<div class="foot"><button class="g" id="kb">📚 Knowledge</button><button class="g" id="theme">🌓 Theme</button><button class="g" id="auto">🔊 Auto-speak: off</button></div></aside>
+<div id="scrim"></div>
+<main><header><button class="g" id="menu" aria-label="Menu">☰</button><h1 id="ttl">Hazel AI</h1>
+<select id="lang" class="g"><option value="hi-IN">हिंदी</option><option value="en-IN">English</option></select>
+<button class="g" id="more" aria-label="More">⋯</button></header>
+<div id="log"></div>
+<div id="bar"><button id="mic" aria-label="Speak"></button><textarea id="in" rows="1" placeholder="Ask Hazel anything…"></textarea><button class="g" id="send">Send</button></div></main>
+<div id="pop"><button data-a="share">↗ Share</button><button data-a="rename">✏️ Rename</button><button data-a="pin">📌 Pin / Unpin</button><button data-a="export">⬇ Export chat</button><button data-a="del">🗑 Delete</button></div>
+<div id="toast"></div>
+<aside id="adm"><button class="g" id="cl">Close</button><h2>Knowledge &amp; settings</h2>
+<input id="pw" type="password" placeholder="Admin password"><button class="g" id="unlock">Unlock</button>
+<p>Add books or notes (PDF, TXT)</p><input id="file" type="file" multiple accept=".pdf,.txt,.md">
+<div id="docs"></div>
+<p>Assistant name</p><input id="nm"><p>Model</p><input id="md">
+<p>Personality</p><textarea id="pr" rows="6"></textarea>
+<button class="g" id="save">Save changes</button></aside>
+
+<script>
+const $=s=>document.querySelector(s),log=$("#log"),inp=$("#in");
+let S={chats:[],cur:null,auto:0,theme:matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"},ctl=null,voiceNext=false,NAME="Hazel";
+try{S={...S,...JSON.parse(localStorage.hz2||"{}")}}catch{}
+const save=()=>{try{localStorage.hz2=JSON.stringify(S)}catch{}};
+const cur=()=>S.chats.find(c=>c.id==S.cur);
+const grow=()=>{inp.style.height="auto";inp.style.height=Math.min(inp.scrollHeight,120)+"px"};
+function toast(t){const e=$("#toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",2800)}
+async function copy(t){try{await navigator.clipboard.writeText(t)}catch{const x=document.createElement("textarea");x.value=t;document.body.append(x);x.select();document.execCommand("copy");x.remove()}}
+
+function md(s){
+  const E=t=>t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  return s.split("```").map((p,i)=>{
+    if(i%2){const n=p.indexOf("\n");return `<div class="cb"><button class="cc g">Copy</button><pre><code>${E(n<0?"":p.slice(n+1))}</code></pre></div>`}
+    return E(p)
+      .replace(/^(?:[-*•] .+\n?)+/gm,m=>"<ul>"+m.trim().split("\n").map(l=>"<li>"+l.slice(2)+"</li>").join("")+"</ul>")
+      .replace(/^(?:\d+\. .+\n?)+/gm,m=>'<ol start="'+parseInt(m)+'">'+m.trim().split("\n").map(l=>"<li>"+l.replace(/^\d+\. /,"")+"</li>").join("")+"</ol>")
+      .replace(/`([^`\n]+)`/g,"<code>$1</code>")
+      .replace(/\*\*([^*\n]+)\*\*/g,"<b>$1</b>")
+      .replace(/(^|[^*\w])\*([^*\n]+)\*/g,"$1<i>$2</i>")
+      .replace(/^#{1,4} (.+)$/gm,"<h3>$1</h3>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+      .replace(/(<\/(?:h3|ul|ol)>)\n/g,"$1");
+  }).join("");
+}
+
+function speak(t){speechSynthesis.cancel();t=t.replace(/```[\s\S]*?```/g," ").replace(/[*#`_>]/g,"");const u=new SpeechSynthesisUtterance(t);u.lang=/[\u0900-\u097F]/.test(t)?"hi-IN":"en-IN";speechSynthesis.speak(u)}
+
+function mk(m,i,last){
+  const d=document.createElement("div");d.className="m "+(m.role=="user"?"u":"a");
+  const b=document.createElement("div");b.className="b";
+  if(m.role=="user")b.textContent=m.content;else b.innerHTML=md(m.content);
+  const a=document.createElement("div");a.className="act";
+  const B=(ic,tip,fn,on)=>{const x=document.createElement("button");x.textContent=ic;x.title=tip;x.setAttribute("aria-label",tip);if(on)x.className="on";x.onclick=()=>fn(x);a.append(x)};
+  B("📋","Copy",x=>{copy(m.content);x.textContent="✓";setTimeout(()=>x.textContent="📋",1200)});
+  if(m.role=="user")B("✏️","Edit",()=>{const c=cur();c.m.length=i;save();inp.value=m.content;grow();renderLog();inp.focus()});
+  else{
+    B("🔊","Listen",()=>speechSynthesis.speaking?speechSynthesis.cancel():speak(m.content));
+    B("👍","Good",()=>{m.fb=m.fb==1?0:1;save();renderLog()},m.fb==1);
+    B("👎","Bad",()=>{m.fb=m.fb==-1?0:-1;save();renderLog()},m.fb==-1);
+    if(last)B("🔄","Regenerate",()=>{cur().m.pop();ask()});
+  }
+  d.append(b,a);return d;
+}
+
+function renderLog(){
+  const c=cur();log.innerHTML="";
+  $("#ttl").textContent=c?c.t:NAME+" AI";
+  if(!c||!c.m.length){
+    const h=document.createElement("div");h.className="hi";
+    h.innerHTML="<h2>Namaste 👋</h2><p>"+NAME+" se kuch bhi poochho</p>";
+    ["Stress kam karne ke 3 tips batao","Ek psychology concept aasan bhasha mein samjhao","Meri aaj ki study plan banao"].forEach(t=>{const b=document.createElement("button");b.className="chip";b.textContent=t;b.onclick=()=>send(t);h.append(b)});
+    log.append(h);return;
+  }
+  c.m.forEach((m,i)=>log.append(mk(m,i,i==c.m.length-1&&m.role=="assistant"&&!ctl)));
+  log.scrollTop=log.scrollHeight;
+}
+
+function renderList(){
+  const q=$("#q").value.toLowerCase(),L=$("#list");L.innerHTML="";
+  S.chats.filter(c=>c.t.toLowerCase().includes(q)).sort((a,b)=>(b.pin||0)-(a.pin||0)).forEach(c=>{
+    const d=document.createElement("div");d.className="ci"+(c.id==S.cur?" on":"");d.textContent=(c.pin?"📌 ":"")+c.t;
+    d.onclick=()=>{S.cur=c.id;save();closeSb();renderLog();renderList()};L.append(d);
+  });
+}
+
+function newChat(){const c={id:Date.now(),t:"New chat",pin:0,m:[]};S.chats.unshift(c);S.cur=c.id;save();renderLog();renderList()}
+
+function send(t){
+  t=(t||"").trim();if(!t||ctl)return;if(!cur())newChat();
+  const c=cur();c.m.push({role:"user",content:t});
+  if(c.m.length==1){c.t=t.slice(0,40);renderList()}
+  inp.value="";grow();ask();
+}
+
+async function ask(){
+  const c=cur(),m={role:"assistant",content:""};c.m.push(m);ctl=new AbortController();$("#send").textContent="Stop";renderLog();
+  const box=log.lastElementChild.querySelector(".b");let fail=false;
+  try{
+    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},signal:ctl.signal,body:JSON.stringify({messages:c.m.slice(0,-1).map(x=>({role:x.role,content:x.content}))})});
+    if(!r.ok||(r.headers.get("content-type")||"").includes("html"))throw new Error("server");
+    const rd=r.body.getReader(),dc=new TextDecoder();
+    for(;;){const{done,value}=await rd.read();if(done)break;m.content+=dc.decode(value,{stream:true});box.innerHTML=md(m.content);log.scrollTop=log.scrollHeight}
+  }catch(e){if(e.name!="AbortError")fail=true}
+  ctl=null;$("#send").textContent="Send";
+  if(!m.content){c.m.pop();if(fail)toast("Server not running. Termux mein uvicorn chalu karo.")}
+  save();renderLog();renderList();
+  if((S.auto||voiceNext)&&m.content)speak(m.content);
+  voiceNext=false;
+}
+
+// Sidebar, header menu, settings
+const closeSb=()=>{$("#sb").classList.remove("open");$("#scrim").classList.remove("open")};
+$("#menu").onclick=()=>{$("#sb").classList.add("open");$("#scrim").classList.add("open")};
+$("#scrim").onclick=closeSb;
+$("#new").onclick=()=>{const c=cur();if(!(c&&!c.m.length))newChat();closeSb()};
+$("#q").oninput=renderList;
+const applyTheme=()=>{document.documentElement.dataset.theme=S.theme};
+$("#theme").onclick=()=>{S.theme=S.theme=="dark"?"light":"dark";applyTheme();save()};
+const autoLbl=()=>{$("#auto").textContent="🔊 Auto-speak: "+(S.auto?"on":"off")};
+$("#auto").onclick=()=>{S.auto=S.auto?0:1;autoLbl();save()};
+$("#more").onclick=e=>{e.stopPropagation();$("#pop").classList.toggle("open")};
+document.onclick=()=>$("#pop").classList.remove("open");
+$("#pop").onclick=async e=>{
+  const a=e.target.dataset.a,c=cur();if(!a)return;
+  if(!c){toast("Pehle koi chat shuru karo");return}
+  const txt=c.m.map(m=>(m.role=="user"?"You: ":NAME+": ")+m.content).join("\n\n");
+  if(a=="share"){if(navigator.share){try{await navigator.share({title:c.t,text:txt})}catch{}}else{copy(txt);toast("Chat copy ho gayi")}}
+  if(a=="rename"){const n=prompt("New name",c.t);if(n)c.t=n.slice(0,60)}
+  if(a=="pin")c.pin=c.pin?0:1;
+  if(a=="export"){const l=document.createElement("a");l.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));l.download=c.t+".txt";l.click()}
+  if(a=="del"&&confirm("Delete this chat?")){S.chats=S.chats.filter(x=>x!=c);S.cur=null}
+  save();renderLog();renderList();
+};
+log.onclick=e=>{if(e.target.classList.contains("cc")){copy(e.target.nextElementSibling.textContent);e.target.textContent="Copied";setTimeout(()=>e.target.textContent="Copy",1200)}};
+
+// Input
+inp.oninput=grow;
+inp.onkeydown=e=>{if(e.key=="Enter"&&!e.shiftKey&&innerWidth>700){e.preventDefault();send(inp.value)}};
+$("#send").onclick=()=>ctl?ctl.abort():send(inp.value);
+
+// Voice (browser speech; swap for an Indian STT/TTS API later)
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
+$("#mic").onclick=()=>{
+  if(!SR){toast("Voice ke liye Chrome chahiye");return}
+  if(rec){rec.stop();return}
+  rec=new SR();rec.lang=$("#lang").value;rec.interimResults=true;$("#mic").classList.add("on");
+  rec.onresult=e=>{inp.value=[...e.results].map(r=>r[0].transcript).join("");grow()};
+  rec.onend=()=>{$("#mic").classList.remove("on");rec=null;if(inp.value.trim()){voiceNext=true;send(inp.value)}};
+  rec.start();
+};
+
+// Admin drawer
+const H=()=>({"x-admin":$("#pw").value});
+$("#kb").onclick=()=>{closeSb();$("#adm").classList.add("open")};
+$("#cl").onclick=()=>$("#adm").classList.remove("open");
+async function refresh(){
+  const r=await fetch("/api/admin/docs",{headers:H()});
+  if(!r.ok){$("#docs").textContent="Wrong password.";return}
+  $("#docs").innerHTML="";
+  Object.entries(await r.json()).forEach(([n,c])=>{
+    const row=document.createElement("div");row.textContent=n+" ("+c+" parts) ";
+    const b=document.createElement("button");b.textContent="Remove";b.className="g";
+    b.onclick=async()=>{await fetch("/api/admin/docs/"+encodeURIComponent(n),{method:"DELETE",headers:H()});refresh()};
+    row.append(b);$("#docs").append(row);
+  });
+  const s=await (await fetch("/api/admin/settings",{headers:H()})).json();
+  $("#nm").value=s.name;$("#md").value=s.model;$("#pr").value=s.prompt;
+}
+$("#unlock").onclick=refresh;
+$("#file").onchange=async e=>{
+  for(const x of e.target.files){const f=new FormData();f.append("f",x);await fetch("/api/admin/upload",{method:"POST",headers:H(),body:f})}
+  refresh();
+};
+$("#save").onclick=async()=>{
+  await fetch("/api/admin/settings",{method:"POST",headers:{...H(),"Content-Type":"application/json"},body:JSON.stringify({name:$("#nm").value,model:$("#md").value,prompt:$("#pr").value})});
+  NAME=$("#nm").value;$("#save").textContent="Saved";renderLog();
+};
+
+// Start
+applyTheme();autoLbl();
+if(!cur())S.cur=null;
+renderLog();renderList();
+fetch("/api/settings").then(r=>r.json()).then(s=>{NAME=s.name;document.title=NAME+" AI";if(!cur())renderLog()}).catch(()=>{});
+</script>
+<script>
+// ===== Hazel v3: voice mode, admin panel, projects, connectors =====
+let CFG={},vm=false,vfin="",vt,spk=false,A={},un=false,tab0="General";
+S.projects=S.projects||[];
+
+function applyCfg(){
+  const R=document.documentElement.style,b=document.body.style;
+  if(CFG.accent)R.setProperty("--hz",CFG.accent);else R.removeProperty("--hz");
+  if(CFG.bg&&S.theme!="dark")R.setProperty("--bg",CFG.bg);else R.removeProperty("--bg");
+  b.backgroundImage=CFG.bgimg?'url("'+CFG.bgimg+'")':"";b.backgroundSize="cover";b.backgroundAttachment="fixed";
+  NAME=CFG.name||NAME;document.title=NAME+" AI";renderLog();
+}
+$("#theme").onclick=()=>{S.theme=S.theme=="dark"?"light":"dark";applyTheme();save();applyCfg()};
+
+const _rl=renderLog;
+renderLog=function(){
+  _rl();const h=log.querySelector(".hi");if(!h)return;
+  if(CFG.welcome)h.querySelector("h2").textContent=CFG.welcome;
+  if(CFG.chips){h.querySelectorAll(".chip").forEach(x=>x.remove());CFG.chips.split("\n").filter(Boolean).forEach(t=>{const b=document.createElement("button");b.className="chip";b.textContent=t;b.onclick=()=>send(t);h.append(b)})}
+};
+
+// ---- speech with admin voice settings ----
+function speak(t){
+  speechSynthesis.cancel();t=t.replace(/```[\s\S]*?```/g," ").replace(/[*#`_>]/g,"");
+  const u=new SpeechSynthesisUtterance(t);u.lang=/[\u0900-\u097F]/.test(t)?"hi-IN":"en-IN";
+  const v=speechSynthesis.getVoices().find(x=>x.name==CFG.voice&&x.lang.slice(0,2)==u.lang.slice(0,2));if(v)u.voice=v;
+  u.rate=+CFG.rate||1;u.pitch=+CFG.pitch||1;spk=true;if(vm)vs("Hazel bol rahi hai…","sp");
+  u.onend=u.onerror=()=>{spk=false;if(vm)listen()};
+  speechSynthesis.speak(u);
+}
+
+// ---- voice mode (full screen) ----
+function vs(t,c){$("#vst").textContent=t;$("#vm").className=(vm?"open ":"")+(c||"")}
+function vClose(){vm=false;vs("");try{rec&&rec.abort()}catch{}speechSynthesis.cancel();ctl&&ctl.abort()}
+function listen(){
+  if(rec)return;
+  if(!SR){toast("Voice ke liye Chrome chahiye");vClose();return}
+  vfin="";$("#live").textContent="";vs("Listening…");
+  rec=new SR();rec.lang=$("#lang").value;rec.interimResults=true;
+  rec.onresult=e=>{vfin=[...e.results].map(r=>r[0].transcript).join("");$("#live").textContent=vfin;vs("Listening…","hot");clearTimeout(vt);vt=setTimeout(()=>{if(vm&&rec)vs("Listening…")},700)};
+  rec.onerror=e=>{if(/not-allowed|service-not-allowed/.test(e.error)){toast("Mic ki permission do");vClose()}};
+  rec.onend=()=>{rec=null;if(!vm)return;if(vfin.trim()){vs("Thinking…","th");voiceNext=true;send(vfin)}else listen()};
+  rec.start();
+}
+$("#mic").onclick=()=>{vm=true;vs("Listening…");listen()};
+$("#vstop").onclick=()=>{if(rec)rec.stop();else{speechSynthesis.cancel();ctl&&ctl.abort()}};
+$("#vx").onclick=vClose;
+const _ask=ask;ask=async function(){await _ask();if(vm&&!spk&&!rec)listen()};
+
+// ---- projects ----
+const _f=fetch;window.fetch=(u,o)=>{
+  if(u=="/api/chat"){const c=cur(),p=c&&S.projects.find(x=>x.id==c.p);if(p){const b=JSON.parse(o.body);b.extra=p.i;o={...o,body:JSON.stringify(b)}}}
+  return _f(u,o)};
+function pjFill(){const s=$("#pj");s.innerHTML="";const o=(v,t)=>{const x=document.createElement("option");x.value=v;x.textContent=t;s.append(x)};o("","📁 All chats");S.projects.forEach(p=>o(p.id,"📁 "+p.n));o("+","＋ New project…");s.value=S.proj||""}
+$("#list").insertAdjacentHTML("beforebegin",'<div class="foot"><select id="pj" class="g" style="flex:1;min-width:0"></select><button class="g" id="pe" aria-label="Project instructions">✏️</button></div>');
+$("#pj").onchange=e=>{const v=e.target.value;if(v=="+"){const n=prompt("Project name");if(n){const p={id:Date.now(),n:n.slice(0,30),i:prompt("Project instructions (Hazel inhe hamesha follow karegi)")||""};S.projects.push(p);S.proj=p.id}}else S.proj=v?+v:null;save();pjFill();renderList()};
+$("#pe").onclick=()=>{const p=S.projects.find(x=>x.id==S.proj);if(!p){toast("Pehle koi project chuno");return}const i=prompt("Instructions",p.i);if(i!==null){p.i=i;save()}};
+const _nc=newChat;newChat=function(){_nc();if(S.proj){cur().p=S.proj;save()}};
+function renderList(){
+  const q=$("#q").value.toLowerCase(),L=$("#list");L.innerHTML="";
+  S.chats.filter(c=>c.t.toLowerCase().includes(q)&&(!S.proj||c.p==S.proj)).sort((a,b)=>(b.pin||0)-(a.pin||0)).forEach(c=>{
+    const d=document.createElement("div");d.className="ci"+(c.id==S.cur?" on":"");d.textContent=(c.pin?"📌 ":"")+c.t;
+    d.onclick=()=>{S.cur=c.id;save();closeSb();renderLog();renderList()};L.append(d)});
+}
+$("#q").oninput=renderList;
+
+// ---- admin panel ----
+const F=[
+["General","name","Assistant name","text"],["General","prompt","Personality (system prompt)","area"],["General","model","Model","text"],
+["General","temp","Creativity","range:0:1:.1"],["General","maxt","Max reply length (tokens)","number"],["General","think","Deep thinking","sel:|low|medium|high"],
+["Look","welcome","Welcome title","text"],["Look","chips","Suggestion buttons (one per line)","area"],["Look","bg","Background colour","color"],["Look","accent","Accent colour","color"],["Look","bgimg","Background image URL","text"],
+["Voice","voice","Voice","voice"],["Voice","rate","Speed","range:.6:1.6:.1"],["Voice","pitch","Pitch","range:.6:1.6:.1"],
+["Connectors","books","Use uploaded books","toggle"],["Connectors","wiki","Wikipedia lookup","toggle"]];
+function fld([t,k,l,ty]){
+  const w=document.createElement("label"),v=A[k]??"",R=ty.startsWith("range")?ty.split(":"):0;w.className="fl";
+  w.innerHTML="<span>"+l+"</span>"+(ty=="area"?'<textarea rows="5"></textarea>':ty=="voice"||ty.startsWith("sel")?"<select></select>":R?'<input type="range" min="'+R[1]+'" max="'+R[2]+'" step="'+R[3]+'">':'<input type="'+(ty=="toggle"?"checkbox":ty)+'">');
+  const i=w.lastChild;i.dataset.k=k;
+  if(ty=="toggle")i.checked=!!+v;
+  else if(ty=="color"){i.value=v||"#f2f4f8";i.oninput=()=>i.dataset.d=1}
+  else if(ty.startsWith("sel")){ty.slice(4).split("|").forEach(o=>i.add(new Option(o,o)));i.value=v}
+  else if(ty=="voice"){i.add(new Option("Default",""));speechSynthesis.getVoices().filter(x=>/^(hi|en)/.test(x.lang)).forEach(x=>i.add(new Option(x.name+" ("+x.lang+")",x.name)));i.value=v}
+  else i.value=R&&!v?1:v;
+  return w;
+}
+function grab(){$("#tp").querySelectorAll("[data-k]").forEach(i=>{const k=i.dataset.k;A[k]=i.type=="checkbox"?(i.checked?1:0):i.type=="color"?(i.dataset.d?i.value:A[k]||""):i.value})}
+function showTab(t){
+  grab();tab0=t;const p=$("#tp");p.innerHTML="";
+  $("#tabs").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.textContent==t));
+  if(t=="Knowledge"){p.innerHTML='<p>Books / notes (PDF, TXT)</p><input type="file" id="fi" multiple accept=".pdf,.txt,.md"><div id="docs"></div>';$("#fi").onchange=e=>up(e.target.files);docs();return}
+  F.filter(f=>f[0]==t).forEach(f=>p.append(fld(f)));
+  if(t=="Look"){p.insertAdjacentHTML("beforeend",'<button class="g" id="rl">Reset look</button>');$("#rl").onclick=()=>{grab();A.bg=A.accent=A.bgimg="";showTab("Look")}}
+  if(t=="Voice"){p.insertAdjacentHTML("beforeend",'<button class="g" id="tv">▶ Test voice</button>');$("#tv").onclick=()=>{grab();CFG={...CFG,voice:A.voice,rate:A.rate,pitch:A.pitch};speak("Namaste, main "+NAME+" hoon. Aap kaise hain?")}}
+}
+async function docs(){
+  const r=await fetch("/api/admin/docs",{headers:H()});if(!r.ok)return;
+  const d=$("#docs");d.innerHTML="";
+  Object.entries(await r.json()).forEach(([n,c])=>{const row=document.createElement("div");row.className="row";row.textContent=n+" · "+c+" parts ";const b=document.createElement("button");b.className="g";b.textContent="Remove";b.onclick=async()=>{await fetch("/api/admin/docs/"+encodeURIComponent(n),{method:"DELETE",headers:H()});docs()};row.append(b);d.append(row)});
+}
+async function up(files){
+  for(const x of files){toast("Uploading "+x.name+"…");const f=new FormData();f.append("f",x);const r=await fetch("/api/admin/upload",{method:"POST",headers:H(),body:f});
+    if(r.ok){const n=(await r.json()).chunks;toast(n?x.name+": "+n+" parts added":x.name+": koi text nahi mila (scanned PDF?)")}else toast("Upload failed: "+x.name)}
+  docs();
+}
+async function unlock(){
+  const r=await fetch("/api/admin/settings",{headers:H()});
+  if(!r.ok){toast("Wrong password");return}
+  A=await r.json();un=true;$("#lock").style.display="none";$("#tabs").style.display="flex";$("#sv").style.display="block";showTab(tab0);
+}
+function openAd(t){closeSb();tab0=t||"General";$("#ad").classList.add("open");if(un)showTab(tab0)}
+
+$("#adm").remove();
+document.body.insertAdjacentHTML("beforeend",'<div id="vm"><button id="vx" aria-label="Close">✕</button><div id="vst"></div><div id="live"></div><div id="wv"></div><button id="vstop" aria-label="Stop">■</button></div><aside id="ad"><div class="ah"><b>Admin panel</b><button class="g" id="adx">✕</button></div><div id="lock"><input id="pw" type="password" placeholder="Admin password"><button class="g" id="unl" style="margin-top:8px">Unlock</button></div><div id="tabs"></div><div id="tp"></div><button class="g" id="sv">Save changes</button></aside>');
+$("#wv").innerHTML="<i></i>".repeat(28);
+["General","Look","Voice","Knowledge","Connectors"].forEach(t=>{const b=document.createElement("button");b.className="g";b.textContent=t;b.onclick=()=>showTab(t);$("#tabs").append(b)});
+$("#adx").onclick=()=>$("#ad").classList.remove("open");
+$("#unl").onclick=unlock;
+$("#sv").onclick=async()=>{
+  grab();const r=await fetch("/api/admin/settings",{method:"POST",headers:{...H(),"Content-Type":"application/json"},body:JSON.stringify(A)});
+  if(r.ok){CFG=await (await fetch("/api/settings")).json();applyCfg();toast("Saved ✓")}else toast("Save failed")
+};
+$("#kb").textContent="⚙️ Admin";$("#kb").onclick=()=>openAd("General");
+const cb=document.createElement("button");cb.className="g";cb.textContent="🔌 Connectors";cb.onclick=()=>openAd("Connectors");$("#kb").after(cb);
+
+pjFill();renderList();
+fetch("/api/settings").then(r=>r.json()).then(c=>{CFG=c;applyCfg()}).catch(()=>{});
+
+</script>
+<script>
+// ===== Hazel v4: Dost avatar, speech pipeline, menu, feature flags, providers admin =====
+let SQ=[],sp0=false,cu=null,inCode=false,codeSaid=false,sdone=0;
+const AVH='<div class="av"><img src="/api/avatar" alt="" onerror="this.style.display=\'none\'"></div>';
+function setSt(s){document.body.dataset.st=s}
+const _vs=vs;vs=function(t,c){_vs(t,c);setSt(/^Listen/.test(t)?"listening":/^Think/.test(t)?"thinking":/^Speak/.test(t)?"speaking":"idle")};
+
+// ---- speech text pipeline: displayText (markdown) -> speechText (plain) ----
+function normalizeForSpeech(t){
+  return t.replace(/!\[[^\]]*\]\([^)]*\)/g," ").replace(/\[([^\]]+)\]\([^)]*\)/g,"$1").replace(/https?:\/\/\S+/g," ").replace(/<[^>]+>/g," ")
+    .replace(/`+([^`]*)`+/g,"$1").replace(/^\s{0,3}#{1,6}\s*(.+)$/gm,"$1.").replace(/^\s*(?:[-*•+]|\d+[.)])\s+/gm,"")
+    .replace(/\*\*|__|~~|\*/g,"").replace(/(^|\s)_|_(\s|$)/g,"$1$2")
+    .replace(/[\p{Extended_Pictographic}\uFE0F\u200d]/gu," ").replace(/[#>|~^\\]/g," ")
+    .replace(/([.!?।,])\1+/g,"$1").replace(/\s*\n+\s*/g,". ").replace(/:\s*\./g,".").replace(/\.\s*\./g,".").replace(/\s+/g," ").trim();
+}
+function mkU(t){
+  const u=new SpeechSynthesisUtterance(t);u.lang=/[\u0900-\u097F]/.test(t)?"hi-IN":"en-IN";
+  const v=speechSynthesis.getVoices().find(x=>x.name==CFG.voice&&x.lang.slice(0,2)==u.lang.slice(0,2));if(v)u.voice=v;
+  u.rate=+CFG.rate||1;u.pitch=+CFG.pitch||1;u.volume=CFG.volume===undefined?1:+CFG.volume;return u;
+}
+const qpush=t=>{SQ.push(t);nextSp()};
+function nextSp(){
+  if(sp0||!SQ.length)return;
+  const u=mkU(SQ.shift());cu=u;sp0=true;spk=true;if(vm)vs("Speaking…","sp");else setSt("speaking");
+  u.onend=u.onerror=()=>{if(cu!==u)return;cu=null;sp0=false;if(SQ.length)nextSp();else{spk=false;if(vm){if(!ctl)listen()}else setSt("idle")}};
+  speechSynthesis.speak(u);
+}
+const _cn=speechSynthesis.cancel.bind(speechSynthesis);
+speechSynthesis.cancel=()=>{SQ=[];cu=null;sp0=false;spk=false;_cn();if(!vm)setSt("idle")};
+function enq(seg){seg.split("```").forEach((p,i)=>{if(i)inCode=!inCode;if(inCode){if(!codeSaid){codeSaid=true;qpush("Maine code bana diya hai, aap use code block mein dekh sakte hain.")}return}const t=normalizeForSpeech(p);if(t)qpush(t)})}
+function feed(full,final){
+  let safe=full;if((full.match(/```/g)||[]).length%2)safe=full.slice(0,full.lastIndexOf("```"));
+  for(;;){
+    const rest=safe.slice(sdone),m=/^[\s\S]*?(?:[.!?।]["')\]]*(?=\s)|\n)/.exec(rest),seg=m?m[0]:final?rest:"";
+    if(!seg)break;sdone+=seg.length;enq(seg);if(!m)break;
+  }
+}
+function speak(t){speechSynthesis.cancel();inCode=false;codeSaid=false;sdone=0;feed(t,true)}
+
+// ---- chat stream: speaks finished sentences while the answer is still arriving ----
+async function ask(){
+  const c=cur(),m={role:"assistant",content:""},sp=S.auto||voiceNext||vm;voiceNext=false;
+  c.m.push(m);ctl=new AbortController();$("#send").textContent="Stop";renderLog();setSt("thinking");
+  if(sp){speechSynthesis.cancel();inCode=false;codeSaid=false;sdone=0}
+  const box=log.lastElementChild.querySelector(".b");let fail=false;
+  try{
+    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},signal:ctl.signal,body:JSON.stringify({messages:c.m.slice(0,-1).map(x=>({role:x.role,content:x.content}))})});
+    if(!r.ok||(r.headers.get("content-type")||"").includes("html"))throw new Error("server");
+    const rd=r.body.getReader(),dc=new TextDecoder();
+    for(;;){const{done,value}=await rd.read();if(done)break;m.content+=dc.decode(value,{stream:true});box.innerHTML=md(m.content);log.scrollTop=log.scrollHeight;if(sp)feed(m.content,false)}
+  }catch(e){if(e.name!="AbortError")fail=true}
+  ctl=null;$("#send").textContent="Send";
+  if(!m.content){c.m.pop();if(fail)toast("Server not running. Termux mein uvicorn chalu karo.")}
+  save();renderLog();renderList();
+  if(sp&&m.content)feed(m.content,true);
+  if(!spk&&!SQ.length){setSt("idle");if(vm&&!rec)listen()}
+}
+$("#vstop").onclick=()=>{if(rec)rec.stop();else{speechSynthesis.cancel();if(ctl)ctl.abort();else if(vm)listen()}};
+$("#vst").insertAdjacentHTML("beforebegin",AVH);
+
+// ---- home screen avatar + greeting ----
+const _rl2=renderLog;
+renderLog=function(){_rl2();const h=log.querySelector(".hi");if(!h)return;h.insertAdjacentHTML("afterbegin",AVH);const p=h.querySelector("p");if(p&&CFG.greeting)p.textContent=CFG.greeting};
+
+// ---- menu + feature flags (driven by admin) ----
+const NAV=[["voice","🎙","Voice Mode"],["dost","🧑","Dost Mode"],["projects","📁","Projects"],["web","🌐","Web Search"],["images","🖼","Images"],["files","📚","Files / Library"],["code","💻","Code"],["memory","🧠","Memory"],["tasks","⏰","Tasks"],["help","❓","Help"]];
+const FL={f_mic:"#mic",f_copy:'.act button[aria-label="Copy"]',f_listen:'.act button[aria-label="Listen"]',f_like:'.act button[aria-label="Good"],.act button[aria-label="Bad"]',f_regen:'.act button[aria-label="Regenerate"]',f_edit:'.act button[aria-label="Edit"]',f_share:'#pop [data-a=share]'};
+function applyFlags(){let s=document.getElementById("flagcss");if(!s){s=document.createElement("style");s.id="flagcss";document.head.append(s)}s.textContent=Object.keys(FL).filter(k=>CFG[k]===0||CFG[k]==="0").map(k=>FL[k]+"{display:none!important}").join("")}
+function renderNav(){
+  const n=$("#nav");n.innerHTML="";
+  NAV.filter(([id])=>CFG["m_"+id]!==0&&CFG["m_"+id]!=="0").forEach(([id,ic,l])=>{
+    const b=document.createElement("div");b.className="ci";b.textContent=ic+" "+l;
+    b.onclick=()=>{closeSb();
+      if(id=="voice"||id=="dost")$("#mic").onclick();
+      else if(id=="projects")$("#pj").focus();
+      else if(id=="files")openAd("Knowledge");
+      else if(id=="help")toast("Mic dabao aur bolo, ya likhkar bhejo. Admin se sab kuch badal sakte ho.");
+      else toast(l+": jald aa raha hai 🚧")};
+    n.append(b)});
+}
+$("#new").insertAdjacentHTML("afterend",'<div id="nav"></div>');
+const _ac=applyCfg;applyCfg=function(){_ac();document.body.style.fontFamily=CFG.font||"";applyFlags();renderNav()};
+
+// ---- more admin tabs ----
+F.push(["General","provider","AI provider","sel:sarvam|gemini|openai|grok"],["General","backup_provider","Backup provider","sel:sarvam|gemini|openai|grok"],["General","backup_model","Backup model (blank = off)","text"],
+["Dost","dost_name","Dost name","text"],["Dost","nick","Nickname","text"],["Dost","greeting","Greeting","text"],["Dost","humor","Humor level","range:0:10:1"],["Dost","formality","Formality","range:0:10:1"],["Dost","length","Response length","sel:short|medium|detailed"],["Dost","emotion","Emotional style","sel:warm|calm|playful|serious"],["Dost","lang","Language","text"],
+["Look","font","Font","sel:|Georgia, serif|system-ui|ui-monospace"],["Voice","volume","Volume","range:0:1:.1"]);
+[["f_mic","Microphone"],["f_copy","Copy"],["f_listen","Listen"],["f_like","Like / dislike"],["f_regen","Regenerate"],["f_edit","Edit message"],["f_share","Share"]].forEach(([k,l])=>F.push(["Features",k,l,"toggle"]));
+NAV.forEach(([id,ic,l])=>F.push(["Menu","m_"+id,ic+" "+l,"toggle"]));
+["Dost","Menu","Features","Testing"].forEach(t=>{const b=document.createElement("button");b.className="g";b.textContent=t;b.onclick=()=>showTab(t);$("#tabs").append(b)});
+const _st=showTab;
+showTab=function(t){
+  if(t=="Testing"){
+    grab();tab0=t;$("#tabs").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.textContent==t));
+    $("#tp").innerHTML='<label class="fl"><span>Provider</span><select id="tp1"><option>sarvam</option><option>gemini</option><option>openai</option><option>grok</option></select></label><label class="fl"><span>Model</span><input id="tm"></label><label class="fl"><span>Test text</span><input id="tt" value="Namaste, kaise ho?"></label><button class="g" id="tgo">Test AI</button><pre id="tout"></pre>';
+    $("#tp1").value=A.provider||"sarvam";$("#tm").value=A.model||"";
+    $("#tgo").onclick=async()=>{$("#tout").textContent="Testing…";const r=await fetch("/api/admin/test",{method:"POST",headers:{...H(),"Content-Type":"application/json"},body:JSON.stringify({provider:$("#tp1").value,model:$("#tm").value,text:$("#tt").value})});const d=await r.json();$("#tout").textContent=(d.ok?"OK · ":"ERROR · ")+d.ms+" ms\n"+d.text};
+    return;
+  }
+  _st(t);
+  if(t=="Dost"){
+    $("#tp").insertAdjacentHTML("afterbegin",'<label class="fl"><span>Avatar photo (replace)</span><input type="file" id="avf" accept="image/*"></label>');
+    $("#avf").onchange=async e=>{const f=new FormData();f.append("f",e.target.files[0]);const r=await fetch("/api/admin/avatar",{method:"POST",headers:H(),body:f});toast(r.ok?"Avatar updated ✓":"Upload failed");if(r.ok)document.querySelectorAll(".av img").forEach(i=>{i.style.display="";i.src="/api/avatar?"+Date.now()})};
+  }
+};
+renderNav();renderLog();
+
+</script></body></html>
